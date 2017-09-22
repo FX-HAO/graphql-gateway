@@ -6,42 +6,22 @@ import { graphiqlExpress } from 'apollo-server-express';
 import * as graphqlHTTP from 'express-graphql';
 import { GraphQLSchema, DocumentNode } from 'graphql';
 
-// function getAuthTokenFromGraphQLContext(context: any) {
-//   if (!context) {
-//     console.log("not valid", context)
-//     return undefined
-//   }
-//   // console.log('context', context);
-//   console.log('headers', context.headers);
-//   return context.headers['authorization'];
-// }
-
 class AuthForwardingGraphQLClient extends HttpGraphQLClient {
   protected async getHeaders(document: DocumentNode, variables?: { [name: string]: any }, context?: any, introspect?: boolean): Promise<{ [index: string]: string }> {
     const headers = await super.getHeaders(document, context, introspect);
-    // return {
-    //     ...headers,
-    //     ...(context && context.headers || {}),
-    // };
+    console.log('headers', headers)
     if (context) {
-      console.log(context.headers)
-      return context.headers
-    } else {
-      return {
+      console.log('context headers', context.headers)
+      return { ...context.headers,
         ...headers
-      }
+       }
+    } else {
+      return { ...headers }
     }
   }
 }
 
 async function run() {
-  // const universeSchema = await makeRemoteExecutableSchema(createApolloFetch({
-  //   uri: 'http://127.0.0.1:3002/queries',
-  // }));
-
-  // const weatherSchema = await makeRemoteExecutableSchema(createApolloFetch({
-  //   uri: 'http://127.0.0.1:3001/queries',
-  // }));
 
   const schema: GraphQLSchema = await createProxySchema({
     endpoints: [{
@@ -62,7 +42,6 @@ async function run() {
   app.use(cors());
 
   app.use('/graphql', bodyParser.json(), graphqlHTTP(request => {
-    console.log(request.headers);
     return {
       schema: schema,
       context: request,
@@ -83,7 +62,6 @@ async function run() {
 
 run()
 .then(a => {
-  console.log(a)
 })
 .catch(e => {
   console.log(e)
