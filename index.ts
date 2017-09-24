@@ -9,31 +9,25 @@ import { GraphQLSchema, DocumentNode } from 'graphql';
 class AuthForwardingGraphQLClient extends HttpGraphQLClient {
   protected async getHeaders(document: DocumentNode, variables?: { [name: string]: any }, context?: any, introspect?: boolean): Promise<{ [index: string]: string }> {
     const headers = await super.getHeaders(document, context, introspect);
-    console.log('headers', headers)
     if (context) {
-      console.log('context headers', context.headers)
-      return { ...context.headers,
-        ...headers
-       }
+      delete context.headers['content-length'];
+      return context.headers
     } else {
-      return { ...headers }
+      return {
+        ...headers
+      }
     }
   }
 }
 
 async function run() {
-
   const schema: GraphQLSchema = await createProxySchema({
     endpoints: [{
-        // url: 'http://127.0.0.1:3002/queries' // url to a GraphQL endpoint
-        // client: new AuthForwardingGraphQLClient({url: 'http://127.0.0.1:3002/queries'})
-        client: new AuthForwardingGraphQLClient({url: 'https://www.universe.com/graphql/beta'})
+        client: new AuthForwardingGraphQLClient({url: 'http://web/queries'})
     }, {
         namespace: 'accounting',
         typePrefix: 'Accounting',
-        // url: 'http://127.0.0.1:3001/queries' // url to a GraphQL endpoint
-        // client: new AuthForwardingGraphQLClient({url: 'http://127.0.0.1:3001/queries'})
-        client: new AuthForwardingGraphQLClient({url: 'https://5rrx10z19.lp.gql.zone/graphql'})
+        client: new AuthForwardingGraphQLClient({url: 'http://financial-accounting/queries'})
     }]
   })
 
@@ -42,6 +36,7 @@ async function run() {
   app.use(cors());
 
   app.use('/graphql', bodyParser.json(), graphqlHTTP(request => {
+    console.log(request.headers);
     return {
       schema: schema,
       context: request,
@@ -56,12 +51,13 @@ async function run() {
     })
   );
 
-  app.listen(3210);
-  console.log('Server running. Open http://localhost:3210/graphiql to run queries.');
+  app.listen(80);
+  console.log('Server running. Open http://localhost:80/graphiql to run queries.');
 }
 
 run()
 .then(a => {
+  console.log(a)
 })
 .catch(e => {
   console.log(e)
