@@ -43,7 +43,14 @@ async function run() {
   //     graphiql: true
   //   }
   // }));
-  app.use('/graphql', bodyParser.json(), graphqlExpress({ schema: schema }));
+
+  app.use('/graphql', bodyParser.json(), (req, res, next) => {
+    if (req.body['variables'] == "" || req.body["variables"] == null) {
+      req.body['variables'] = {};
+    }
+    next();
+  }
+  , graphqlExpress({ schema: schema }));
   app.get('/graphiql', graphiqlExpress({ endpointURL: '/graphql' }));
 
   // app.use(
