@@ -2,14 +2,14 @@ import * as express from 'express';
 import * as cors from 'cors';
 import * as bodyParser from 'body-parser';
 import { createProxySchema, HttpGraphQLClient } from 'graphql-weaver';
-import { graphqlExpress, graphiqlExpress } from 'apollo-server-express';
-// import * as graphqlHTTP from 'express-graphql';
+import { graphqlExpress } from 'apollo-server-express';
+import * as graphqlHTTP from 'express-graphql';
 import { GraphQLSchema, DocumentNode } from 'graphql';
 
 class AuthForwardingGraphQLClient extends HttpGraphQLClient {
   protected async getHeaders(document: DocumentNode, variables?: { [name: string]: any }, context?: any, introspect?: boolean): Promise<{ [index: string]: string }> {
-    const headers = await super.getHeaders(document, context, introspect);
-    if (context) {
+    let headers = await super.getHeaders(document, context, introspect);
+    if (context && context.headers && context.headers['content-length']) {
       delete context.headers['content-length'];
       return context.headers
     } else {
@@ -35,23 +35,29 @@ async function run() {
 
   app.use(cors());
 
-  // app.use('/graphql', bodyParser.json(), graphqlHTTP(request => {
-  //   console.log(request.headers);
-  //   return {
-  //     schema: schema,
-  //     context: request,
-  //     graphiql: true
-  //   }
-  // }));
+  app.use('/graphql', bodyParser.json(), graphqlHTTP(request => {
+    console.log(request.headers);
+    return {
+      schema: schema,
+      context: request,
+      graphiql: true
+    }
+  }));
 
   app.use('/graphql', bodyParser.json(), (req, res, next) => {
-    if (req.body['variables'] == "" || req.body["variables"] == null) {
-      req.body['variables'] = {};
+    if (req.body['variables'] == "" || req.body['variables'] == null) {
+        req.body['variables'] = {}
     }
     next();
+}, graphqlExpress({ schema: schema }, ), graphqlHTTP(request => {
+  console.log(request.headers);
+  return {
+    schema: schema,
+    context: request,
+    graphiql: true
   }
-  , graphqlExpress({ schema: schema }));
-  app.get('/graphiql', graphiqlExpress({ endpointURL: '/graphql' }));
+}));
+  // app.get('/graphiql', graphiqlExpress({ endpointURL: '/graphql' }));
 
   // app.use(
   //   '/graphiql',
