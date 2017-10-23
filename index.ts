@@ -2,8 +2,8 @@ import * as express from 'express';
 import * as cors from 'cors';
 import * as bodyParser from 'body-parser';
 import { createProxySchema, HttpGraphQLClient } from 'graphql-weaver';
-import { graphiqlExpress } from 'apollo-server-express';
-import * as graphqlHTTP from 'express-graphql';
+import { graphqlExpress, graphiqlExpress } from 'apollo-server-express';
+// import * as graphqlHTTP from 'express-graphql';
 import { GraphQLSchema, DocumentNode } from 'graphql';
 
 class AuthForwardingGraphQLClient extends HttpGraphQLClient {
@@ -35,21 +35,23 @@ async function run() {
 
   app.use(cors());
 
-  app.use('/graphql', bodyParser.json(), graphqlHTTP(request => {
-    console.log(request.headers);
-    return {
-      schema: schema,
-      context: request,
-      graphiql: true
-    }
-  }));
+  // app.use('/graphql', bodyParser.json(), graphqlHTTP(request => {
+  //   console.log(request.headers);
+  //   return {
+  //     schema: schema,
+  //     context: request,
+  //     graphiql: true
+  //   }
+  // }));
+  app.use('/graphql', bodyParser.json(), graphqlExpress({ schema: schema }));
+  app.get('/graphiql', graphiqlExpress({ endpointURL: '/graphql' }));
 
-  app.use(
-    '/graphiql',
-    graphiqlExpress({
-      endpointURL: '/graphql',
-    })
-  );
+  // app.use(
+  //   '/graphiql',
+  //   graphiqlExpress({
+  //     endpointURL: '/graphql',
+  //   })
+  // );
 
   app.listen(80);
   console.log('Server running. Open http://localhost:80/graphiql to run queries.');
