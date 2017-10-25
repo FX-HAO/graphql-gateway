@@ -3,7 +3,7 @@ import * as cors from 'cors';
 import * as bodyParser from 'body-parser';
 import { createProxySchema, HttpGraphQLClient } from 'graphql-weaver';
 import { graphqlExpress, graphiqlExpress } from 'apollo-server-express';
-import { GraphQLSchema, DocumentNode } from 'graphql';
+import { DocumentNode } from 'graphql';
 
 class AuthForwardingGraphQLClient extends HttpGraphQLClient {
   protected async getHeaders(document: DocumentNode, variables?: { [name: string]: any }, context?: any, introspect?: boolean): Promise<{ [index: string]: string }> {
@@ -18,17 +18,21 @@ class AuthForwardingGraphQLClient extends HttpGraphQLClient {
     }
   }
 }
+async function createSchema() {
+  return await createProxySchema({
+    endpoints: [{
+      client: new AuthForwardingGraphQLClient({url: 'http://web/queries'})
+    }, {
+      namespace: 'accounting',
+      typePrefix: 'Accounting',
+      client: new AuthForwardingGraphQLClient({url: 'http://financial-accounting/queries'})
+    }]
+  });
+}
 
 async function run() {
-  const schema: GraphQLSchema = await createProxySchema({
-    endpoints: [{
-        client: new AuthForwardingGraphQLClient({url: 'http://web/queries'})
-    }, {
-        namespace: 'accounting',
-        typePrefix: 'Accounting',
-        client: new AuthForwardingGraphQLClient({url: 'http://financial-accounting/queries'})
-    }]
-  })
+
+  let currentSchema = await createSchema();
 
   const app = express();
 
@@ -43,11 +47,15 @@ async function run() {
     },
     graphqlExpress(req => {
       return ({
-        schema: schema,
+        schema: currentSchema,
         context: req
       });
     })
   );
+
+  setInterval(async function () {
+    currentSchema = await createSchema();
+  }, 10000);
 
   app.get('/graphiql', graphiqlExpress({ endpointURL: '/graphql' }));
 
