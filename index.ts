@@ -1,8 +1,9 @@
-import * as express from 'express';
-import * as cors from 'cors';
-import * as bodyParser from 'body-parser';
+import * as koa from 'koa';
+import * as koaRouter from 'koa-router';
+import * as koaBody from 'koa-bodyparser';
+import * as cors from 'kcors';
+import { graphqlKoa, graphiqlKoa } from 'apollo-server-koa';
 import { createProxySchema, HttpGraphQLClient } from 'graphql-weaver';
-import { graphqlExpress, graphiqlExpress } from 'apollo-server-express';
 import { DocumentNode } from 'graphql';
 
 class AuthForwardingGraphQLClient extends HttpGraphQLClient {
@@ -34,30 +35,35 @@ async function run() {
 
   let currentSchema = await createSchema();
 
-  const app = express();
+  const app = new koa();
+  const router = new koaRouter();
 
-  app.use(cors());
-
-  app.use('/graphql', bodyParser.json(),
-    (req, res, next) => {
-      if (req.body['variables'] == "" || req.body['variables'] == null) {
-        req.body['variables'] = {}
-      }
+  // koaBody is needed just for POST.
+  router.post('/graphql', koaBody(),
+    (ctx, next) => {
+      console.log("m1 start");
+      console.log(ctx.request);
       next();
-    },
-    graphqlExpress(req => {
+      console.log(ctx.response);
+      console.log(ctx.body);
+      console.log("m1 end");
+    }
+    ,graphqlKoa(req => {
       return ({
         schema: currentSchema,
         context: req
       });
-    })
-  );
+    }));
+
+  router.get('/graphiql', graphiqlKoa({endpointURL: '/graphql'}));
+
+  app.use(cors());
+  app.use(router.routes());
+  app.use(router.allowedMethods());
 
   setInterval(async function () {
     currentSchema = await createSchema();
   }, 10000);
-
-  app.get('/graphiql', graphiqlExpress({ endpointURL: '/graphql' }));
 
   const port: number = 80;
   app.listen(port);
