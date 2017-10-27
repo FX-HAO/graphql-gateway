@@ -15,7 +15,7 @@ app.use(async (ctx, next) => {
     if (v !== undefined && v["name"] !== undefined) {
       const name = parseInt(v["name"]);
       if (name / 100 > 2) {
-        ctx.throw(name, {error: "invalid input"});
+        ctx.throw(name, `{"error": "invalid input"}`);
       }
     }
   }
