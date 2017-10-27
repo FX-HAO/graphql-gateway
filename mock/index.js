@@ -13,8 +13,9 @@ app.use(async (ctx, next) => {
     console.log(ctx.request.body);
     const v = ctx.request.body.variables;
     if (v !== undefined && v["name"] !== undefined) {
-      if (v["name"] === "401") {
-        ctx.throw(401, "invalid grant");
+      const name = parseInt(v["name"]);
+      if (name / 100 > 2) {
+        ctx.throw(name, {error: "invalid input"});
       }
     }
   }
