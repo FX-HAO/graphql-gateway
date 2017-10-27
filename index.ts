@@ -2,11 +2,20 @@ import * as koa from 'koa';
 import * as koaRouter from 'koa-router';
 import * as koaBody from 'koa-bodyparser';
 import * as cors from 'kcors';
-import { graphqlKoa, graphiqlKoa } from 'apollo-server-koa';
-import { createProxySchema, HttpGraphQLClient } from 'graphql-weaver';
-import { DocumentNode } from 'graphql';
+import {graphiqlKoa, graphqlKoa} from 'apollo-server-koa';
+import {createProxySchema, HttpGraphQLClient} from 'graphql-weaver';
+import {Response} from 'node-fetch';
+import {DocumentNode} from 'graphql';
 
 class AuthForwardingGraphQLClient extends HttpGraphQLClient {
+  protected async fetchResponse(document: DocumentNode, variables?: { [name: string]: any }, context?: any, introspect?: boolean): Promise<Response> {
+    const response = await super.fetchResponse(document, variables, context, introspect);
+    if (!response.ok) {
+      context.state = {raw: response};
+    }
+    return response;
+  }
+
   protected async getHeaders(document: DocumentNode, variables?: { [name: string]: any }, context?: any, introspect?: boolean): Promise<{ [index: string]: string }> {
     let headers = await super.getHeaders(document, context, introspect);
     if (context && context.headers && context.headers['content-length']) {
@@ -37,13 +46,25 @@ async function run() {
 
   const app = new koa();
   const router = new koaRouter();
+  app.use(async (ctx, next) => {
+    console.log('me start');
+    await next(); // graphql execution
+    if (ctx.state.raw !== undefined) {
+      const raw: Response = ctx.state.raw;
+      const body = await raw.text();
+      console.log(`status: ${raw.status}, body: ${body}`);
+      ctx.status = raw.status;
+      ctx.body = body;
+    }
+    console.log('me end');
+  });
 
   // koaBody is needed just for POST.
   router.post('/graphql', koaBody(),
-    (ctx, next) => {
+    async (ctx, next) => {
       console.log("m1 start");
       console.log(ctx.request);
-      next();
+      await next();
       console.log(ctx.response);
       console.log(ctx.body);
       console.log("m1 end");
