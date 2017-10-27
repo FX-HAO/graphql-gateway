@@ -12,7 +12,7 @@ app.use(async (ctx, next) => {
   if (ctx.request.body !== undefined) {
     console.log(ctx.request.body);
     const v = ctx.request.body.variables;
-    if (v["name"] !== undefined) {
+    if (v !== undefined && v["name"] !== undefined) {
       if (v["name"] === "401") {
         ctx.throw(401, "invalid grant");
       }
