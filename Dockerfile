@@ -8,7 +8,6 @@ RUN wget https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSI
     && rm dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz
 RUN npm config set registry https://registry.npm.taobao.org
 ADD package.json /graphql-gateway/package.json
-ADD package-lock.json /graphql-gateway/package-lock.json
 RUN npm install
 ADD ./ /graphql-gateway/
 EXPOSE 80
