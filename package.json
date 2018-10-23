@@ -13,7 +13,7 @@
     "express-graphql": "^0.6.11",
     "graphql": "^0.11.7",
     "graphql-tools": "^2.0.0-alpha.11",
-    "graphql-weaver": "^0.11.0",
+    "graphql-weaver": "^0.11.11",
     "kcors": "^2.2.1",
     "koa": "^2.3.0",
     "koa-bodyparser": "^4.2.0",

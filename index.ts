@@ -20,7 +20,7 @@ class AuthForwardingGraphQLClient extends HttpGraphQLClient {
     let headers = await super.getHeaders(document, context, introspect);
     if (context && context.headers && context.headers['content-length']) {
       delete context.headers['content-length'];
-      return context.headers
+      return context.headers;
     } else {
       return {
         ...headers
