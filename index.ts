@@ -30,11 +30,11 @@ class AuthForwardingGraphQLClient extends HttpGraphQLClient {
 async function createSchema() {
   return await createProxySchema({
     endpoints: [{
-      client: new AuthForwardingGraphQLClient({url: 'http://web/queries'})
+      client: new AuthForwardingGraphQLClient({url: 'http://localhost:4000/graphql'})
     }, {
       namespace: 'accounting',
       typePrefix: 'Accounting',
-      client: new AuthForwardingGraphQLClient({url: 'http://financial-accounting/queries'})
+      client: new AuthForwardingGraphQLClient({url: 'http://localhost:4000/graphql'})
     }]
   });
 }
