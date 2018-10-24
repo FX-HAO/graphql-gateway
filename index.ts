@@ -4,12 +4,11 @@ import * as koaBody from 'koa-bodyparser';
 import * as cors from 'kcors';
 import {graphiqlKoa, graphqlKoa} from 'apollo-server-koa';
 import {createProxySchema, HttpGraphQLClient} from 'graphql-weaver';
-import {Response} from 'node-fetch';
 import {DocumentNode} from 'graphql';
 
 class AuthForwardingGraphQLClient extends HttpGraphQLClient {
-  protected async fetchResponse(document: DocumentNode, variables?: { [name: string]: any }, context?: any, introspect?: boolean): Promise<Response> {
-    const response = await super.fetchResponse(document, variables, context, introspect);
+  protected async fetchResponse(document: DocumentNode, variables?: { [name: string]: any }, context?: any, introspect?: boolean): Promise<any> {
+    const response:any = await super.fetchResponse(document, variables, context, introspect);
     if (!response.ok) {
       context.state = {raw: response};
     }
@@ -50,7 +49,7 @@ async function run() {
     console.log('me start');
     await next(); // graphql execution
     if (ctx.state.raw !== undefined) {
-      const raw: Response = ctx.state.raw;
+      const raw: any = ctx.state.raw;
       const body = await raw.text();
       console.log(`status: ${raw.status}, body: ${body}`);
       ctx.status = raw.status;

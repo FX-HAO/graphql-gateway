@@ -1,4 +1,4 @@
-from node:8.5
+FROM node:8.12
 WORKDIR /graphql-gateway
 RUN apt-get update
 RUN apt-get install -y vim

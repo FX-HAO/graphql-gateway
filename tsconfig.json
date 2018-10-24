@@ -1,16 +1,18 @@
 {
   "compilerOptions": {
-    "target": "es5",
+    "target": "es2017",
     "moduleResolution": "node",
-    "sourceMap": true,
-    "declaration": true,
+    "sourceMap": false,
+    "declaration": false,
     "allowSyntheticDefaultImports": true,
     "removeComments": true,
     "noImplicitAny": true,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
     "strictNullChecks": true,
+    "skipLibCheck": true,
     "noUnusedLocals": true,
+    "outDir": "dist",
     "lib": [
       "es2015"
     ]
